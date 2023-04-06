@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<!--namespace绑定的是Dao/Mapper接口-->
+
+<mapper namespace="com.douya.dao.CheckItemDao">
+
+    <insert id="add" parameterType="com.douya.pojo.CheckItem">
+        insert into t_checkitem(code,name,sex,age,price,type,remark,attention)
+        values
+        (#{code},#{name},#{sex},#{age},#{price},#{type},#{remark},#{attention})
+    </insert>
+
+    <!--1.根据查询条件查询 这里需要传递的是 String queryString
+        2.select * from t_checkitem limit 0,10 (这里的0是currentPage，10是pageSize
+        使用查询插件就不需要limit 0,10了,
+        3.<if test="value != null 中的value是传进来的值
+     */-->
+    <select id="selectByCondition" parameterType="String" resultType="com.douya.pojo.CheckItem">
+        select * from t_checkitem
+        <if test="value != null and value.length>0">
+            where code=#{value} or name=#{value}
+        </if>
+    </select>
+
+
+    <!--在检查项和检查组关联的表中查询数据 ，若有数据则不可以删除检查项的数据
+        t_checkgroup_checkitem 这个表是 两个相关连的表-->
+    <select id="findCountByCheckItemId" parameterType="int" resultType="long">
+      select count(*) from t_checkgroup_checkitem  where checkitem_id =#{checkitem_id}
+    </select>
+    <delete id="deleteById" parameterType="int">
+        delete from  t_checkitem where id=#{id}
+    </delete>
+
+
+    <!--修改操作sql 需要使用动态sql ，因为要修改的字段是动态的，不确定用户要修改哪一个-->
+    <update id="edit" parameterType="com.douya.pojo.CheckItem">
+        update  t_checkitem
+        <set>
+            <if test="name != null">
+                name = #{name},
+            </if>
+            <if test="sex != null">
+                sex = #{sex},
+            </if>
+            <if test="code != null">
+                code = #{code},
+            </if>
+            <if test="age != null">
+                age = #{age},
+            </if>
+            <if test="price != null">
+                price = #{price},
+            </if>
+            <if test="type != null">
+                type = #{type},
+            </if>
+            <if test="attention != null">
+                attention = #{attention},
+            </if>
+            <if test="remark != null">
+                remark = #{remark},
+            </if>
+        </set>
+        where id =#{id}
+    </update>
+
+
+    <select id="findById" parameterType="int" resultType="com.douya.pojo.CheckItem">
+        select * from  t_checkitem where id=#{id}
+    </select>
+
+    <select id="findAll" resultType="com.douya.pojo.CheckItem">
+        select * from  t_checkitem
+    </select>
+
+
+<!--    根据检查组id  查询检查项-->
+    <select id="findCheckItemById" resultType="com.douya.pojo.CheckItem" parameterType="int">
+        select * from t_checkitem
+        where id
+        in (select checkitem_id from t_checkgroup_checkitem where checkgroup_id=#{id})
+    </select>
+</mapper>

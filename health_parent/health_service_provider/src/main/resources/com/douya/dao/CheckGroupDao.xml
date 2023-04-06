@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.douya.dao.CheckGroupDao">
+
+
+
+    
+    
+    
+    <!--
+            通过mybatis框架提供的selectKey来获取标签产生的自增的id值 即( 获取检查组刚刚插入的数据的id值
+            order="AFTER" 代表必须在插入后才能获取
+            keyProperty="id" 代表 下面的插入语句查询的id赋值给CheckGroup的id属性
+    -->
+    <insert id="add" parameterType="com.douya.pojo.CheckGroup">
+        insert into t_checkgroup(code,name,sex,helpCode,remark,attention)
+        values
+        (#{code},#{name},#{sex},#{helpCode},#{remark},#{attention})
+        <selectKey resultType="java.lang.Integer" order="AFTER" keyProperty="id">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+
+<!--    设置检查组和检查项的多对多关系-->
+    <insert id="setCheckGroupAndCheckItem" parameterType="map">
+        insert into t_checkgroup_checkitem(checkgroup_id,checkitem_id)
+        values
+        (#{checkgroup_id},#{checkitem_id})
+    </insert>
+
+
+<!--    分页（分页助手完成了， 这个是根据条件查询-->
+    <select id="findByCondition" parameterType="String" resultType="com.douya.pojo.CheckGroup">
+        select * from t_checkgroup
+        <if test="value !=null and value!='' and value.length>0">
+            where code=#{code} or name=#{name} or helpCode=#{helpCode}
+        </if>
+    </select>
+
+    <select id="findById" parameterType="int" resultType="com.douya.pojo.CheckGroup">
+        select * from t_checkgroup where id = #{id}
+    </select>
+
+<!--    根据检查组id查询关联的多个检查项id,
+        查询中间关系表-->
+    <select id="findCheckItemIdsByCheckGroupId" parameterType="int" resultType="int">
+        select checkitem_id from t_checkgroup_checkitem where checkgroup_id = #{id}
+    </select>
+
+<!--    根据id动态修改 检查组相关字段-->
+  <update id="edit" parameterType="com.douya.pojo.CheckGroup">
+      update t_checkgroup
+      <set>
+          <if test="name != null">
+              name = #{name},
+          </if>
+          <if test="sex != null">
+              sex = #{sex},
+          </if>
+          <if test="code != null">
+              code = #{code},
+          </if>
+          <if test="helpCode != null">
+              helpCode = #{helpCode},
+          </if>
+          <if test="attention != null">
+              attention = #{attention},
+          </if>
+          <if test="remark != null">
+              remark = #{remark},
+          </if>
+      </set>
+      where id = #{id}
+  </update>
+
+<!--    根据检查组id请理检查项信息 （清理原有关联关系）
+        操作的表是中间表-->
+    <delete id="deleteAssocication" parameterType="int">
+        delete from t_checkgroup_checkitem where checkgroup_id = #{id}
+    </delete>
+
+
+<!--    删除之前应该先判断 两表是否已经关联
+        即:中间表查找checkgroup_id 是否可以查询到，若查询到则不能删除-->
+    <select id="findCountByCheckGroupId" parameterType="int" resultType="long">
+        select count(*) from t_checkgroup_checkitem  where  checkgroup_id = #{checkgroup_id}
+    </select>
+    <delete id="deleteById" parameterType="int">
+        delete from t_checkgroup where id = #{id}
+    </delete>
+
+    <select id="findAll" resultType="com.douya.pojo.CheckGroup" >
+        select * from t_checkgroup
+    </select>
+
+
+<!--    根据套中间表的id 查询套餐关联的检查组详情 (关联的检查项详情 -->
+    <select id="findCheckGroupById" parameterType="int" resultMap="findByIdResultMap">
+        select * from t_checkgroup where id in
+        (select checkgroup_id from t_setmeal_checkgroup where setmeal_id=#{id})
+    </select>
+
+    <resultMap id="baseResultMap" type="com.douya.pojo.CheckGroup">
+    <id column="id" property="id"></id>
+    <result column="code" property="code"></result>
+    <result column="name" property="name"/>
+    <result column="helpCode" property="helpCode"/>
+    <result column="sex" property="sex"/>
+    <result column="remark" property="remark"/>
+    <result column="attention" property="attention"/>
+    </resultMap>
+
+<!--    id是检查组的id
+        检查组和检查项的多对多关联-->
+    <resultMap id="findByIdResultMap" type="com.douya.pojo.CheckGroup" extends="baseResultMap">
+       <collection property="checkItems" ofType="com.douya.pojo.CheckItem"
+                   column="id"
+                   select="com.douya.dao.CheckItemDao.findCheckItemById">
+       </collection>
+    </resultMap>
+</mapper>

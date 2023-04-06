@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<!--namespace绑定的是Dao/Mapper接口-->
+
+<mapper namespace="com.douya.dao.UserDao">
+   <select id="findByUsername" parameterType="String" resultType="com.douya.pojo.User">
+       select * from t_user where username = #{username}
+   </select>
+</mapper>

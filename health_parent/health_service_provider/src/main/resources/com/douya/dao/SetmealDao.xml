@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<!--namespace绑定的是Dao/Mapper接口-->
+<mapper namespace="com.douya.dao.SetmealDao">
+
+
+
+<!--    新增套餐操作(包换两个步骤-->
+    <insert id="add" parameterType="com.douya.pojo.Setmeal">
+        insert into t_setmeal
+        (code,name,sex,age,helpCode,price,remark,attention,img)
+        values
+        (#{code},#{name},#{sex},#{age},#{helpCode},#{price},#{remark},#{attention},#{img})
+       <!--获取复选框新增的检查组的id-->
+        <selectKey resultType="java.lang.Integer" order="AFTER" keyProperty="id">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+<!--设置套餐和检查组的多对多关系-->
+    <insert id="setSetmealAndCheckGroup" parameterType="hashmap">
+        insert into t_setmeal_checkgroup
+        (setmeal_id,checkgroup_id)
+        values
+        (#{setmealId},#{checkgroupId})
+    </insert>
+
+
+    <!--    分页（分页助手完成了， 这个是根据条件查询-->
+    <select id="findByCondition" parameterType="String" resultType="com.douya.pojo.Setmeal">
+        select * from t_setmeal
+        <if test="value != null and value.length > 0">
+            where code = #{value} or name = #{value} or helpCode = #{value}
+        </if>
+    </select>
+
+
+    <select id="findAll" resultType="com.douya.pojo.Setmeal">
+        select * from t_setmeal
+    </select>
+
+<!--    根据id查询套餐详情 (套餐基本信息 +套餐包含的检查组+ 检查项
+        设计多张表  sql语句比较麻烦-->
+    <select id="findById" parameterType="int" resultMap="findByIdResultMap">
+         select * from  t_setmeal where id =#{id}
+    </select>
+
+    <resultMap id="baseResultMap" type="com.douya.pojo.Setmeal">
+        <id column="id" property="id"></id>
+        <result column="name" property="name"></result>
+        <result column="code" property="code"/>
+        <result column="helpCode" property="helpCode"/>
+        <result column="sex" property="sex"/>
+        <result column="age" property="age"/>
+        <result column="price" property="price"/>
+        <result column="remark" property="remark"/>
+        <result column="attention" property="attention"/>
+        <result column="img" property="img"/>
+    </resultMap>
+
+    <resultMap id="findByIdResultMap" type="com.douya.pojo.Setmeal" extends="baseResultMap">
+        <!--       多对多映射
+                套餐和检查组的多对多关联-->
+        <collection
+                property="checkGroups"
+                ofType="com.douya.pojo.CheckGroup"
+                javaType="ArrayList"
+                select="com.douya.dao.CheckGroupDao.findCheckGroupById"
+                column="id">
+        </collection>
+    </resultMap>
+</mapper>

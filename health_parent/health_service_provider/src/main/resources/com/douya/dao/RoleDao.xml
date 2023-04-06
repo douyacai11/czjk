@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<!--namespace绑定的是Dao/Mapper接口-->
+
+<mapper namespace="com.douya.dao.RoleDao">
+<!--    根据用户id查询关联的 role角色信息
+        是多对多的关系 ，会涉及到中间关系表t_user_role-->
+   <select id="findByUserId" parameterType="int" resultType="com.douya.pojo.Role">
+       SELECT r.*
+       FROM t_role r,t_user_role ur
+       WHERE r.`id`=ur.`role_id` AND ur.`user_id`=#{user_id};
+   </select>
+</mapper>
